@@ -294,15 +294,15 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         completeCompoundConfigs();
         // Config Center should always being started first.
         startConfigCenter();
-        checkDefault();
-        checkProtocol();
-        checkApplication();
+        checkDefault();// new Provider() and refresh and set
+        checkProtocol();// new ProtocolConfig() and refresh and set protocols
+        checkApplication();// ApplicationModel.setApplication(application.getName());
         // if protocol is not injvm checkRegistry
         if (!isOnlyInJvm()) {
             checkRegistry();
         }
         this.refresh();
-        checkMetadataReport();
+        checkMetadataReport();// new MetadataReportConfig() and set
 
         if (StringUtils.isEmpty(interfaceName)) {
             throw new IllegalStateException("<dubbo:service interface=\"\" /> interface not allow null!");
@@ -320,8 +320,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
-            checkInterfaceAndMethods(interfaceClass, methods);
-            checkRef();
+            checkInterfaceAndMethods(interfaceClass, methods);// nothing
+            checkRef();// nothing
             generic = Boolean.FALSE.toString();
         }
         if (local != null) {
@@ -352,8 +352,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + interfaceName);
             }
         }
-        checkStubAndLocal(interfaceClass);
-        checkMock(interfaceClass);
+        checkStubAndLocal(interfaceClass);// nothing
+        checkMock(interfaceClass);// nothing
     }
 
     /**

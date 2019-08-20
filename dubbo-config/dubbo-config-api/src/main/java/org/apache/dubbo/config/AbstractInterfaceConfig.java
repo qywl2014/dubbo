@@ -193,9 +193,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      * Check whether the registry config is exists, and then conversion it to {@link RegistryConfig}
      */
     protected void checkRegistry() {
-        loadRegistriesFromBackwardConfig();
+        loadRegistriesFromBackwardConfig();// nothing
 
-        convertRegistryIdsToRegistries();
+        convertRegistryIdsToRegistries();// nothing
 
         for (RegistryConfig registryConfig : registries) {
             if (!registryConfig.isValid()) {
@@ -204,7 +204,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             }
         }
 
-        useRegistryForConfigIfNecessary();
+        useRegistryForConfigIfNecessary();// set setConfigCenter and start
     }
 
     @SuppressWarnings("deprecation")
