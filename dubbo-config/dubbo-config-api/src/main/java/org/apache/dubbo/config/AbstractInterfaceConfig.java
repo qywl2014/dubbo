@@ -384,10 +384,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         appendParameters(map, application);
         String address = monitor.getAddress();
         String sysaddress = System.getProperty("dubbo.monitor.address");
-        if (sysaddress != null && sysaddress.length() > 0) {
+        if (sysaddress != null && sysaddress.length() > 0) {// 跳过
             address = sysaddress;
         }
-        if (ConfigUtils.isNotEmpty(address)) {
+        if (ConfigUtils.isNotEmpty(address)) {// 跳过
             if (!map.containsKey(PROTOCOL_KEY)) {
                 if (getExtensionLoader(MonitorFactory.class).hasExtension(LOGSTAT_PROTOCOL)) {
                     map.put(PROTOCOL_KEY, LOGSTAT_PROTOCOL);
@@ -396,7 +396,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 }
             }
             return UrlUtils.parseURL(address, map);
-        } else if (REGISTRY_PROTOCOL.equals(monitor.getProtocol()) && registryURL != null) {
+        } else if (REGISTRY_PROTOCOL.equals(monitor.getProtocol()) && registryURL != null) {// 跳过
             return URLBuilder.from(registryURL)
                     .setProtocol(DUBBO_PROTOCOL)
                     .addParameter(PROTOCOL_KEY, REGISTRY_PROTOCOL)

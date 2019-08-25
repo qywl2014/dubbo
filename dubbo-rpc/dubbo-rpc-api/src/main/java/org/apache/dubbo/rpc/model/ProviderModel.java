@@ -41,7 +41,7 @@ public class ProviderModel {
         this.serviceInstance = serviceInstance;
         this.serviceInterfaceClass = serviceInterfaceClass;
 
-        initMethod();
+        initMethod();// 初始化methods 使用serviceInterfaceClass中的方法 key是方法名 value是Method对象的包装 存在同名的方法是方法重载
     }
 
 

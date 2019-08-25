@@ -324,7 +324,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             checkRef();// nothing
             generic = Boolean.FALSE.toString();
         }
-        if (local != null) {
+        if (local != null) {// 跳过
             if (Boolean.TRUE.toString().equals(local)) {
                 local = interfaceName + "Local";
             }
@@ -338,7 +338,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 throw new IllegalStateException("The local implementation class " + localClass.getName() + " not implement interface " + interfaceName);
             }
         }
-        if (stub != null) {
+        if (stub != null) {// 跳过
             if (Boolean.TRUE.toString().equals(stub)) {
                 stub = interfaceName + "Stub";
             }
@@ -452,8 +452,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         List<URL> registryURLs = loadRegistries(true);
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
-            ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
-            ApplicationModel.initProviderModel(pathKey, providerModel);
+            ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);// provider ref对象的包装
+            ApplicationModel.initProviderModel(pathKey, providerModel);// ApplicationModel中存入provider
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
@@ -476,7 +476,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         appendParameters(map, provider);
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
-        if (CollectionUtils.isNotEmpty(methods)) {
+        if (CollectionUtils.isNotEmpty(methods)) {// 跳过
             for (MethodConfig method : methods) {
                 appendParameters(map, method, method.getName());
                 String retryKey = method.getName() + ".retry";
@@ -532,16 +532,16 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             } // end of methods for
         }
 
-        if (ProtocolUtils.isGeneric(generic)) {
+        if (ProtocolUtils.isGeneric(generic)) {// false
             map.put(GENERIC_KEY, generic);
             map.put(METHODS_KEY, ANY_VALUE);
-        } else {
+        } else {// 将interfaceClass中的方法存入map key是methods value是方法名以逗号分隔
             String revision = Version.getVersion(interfaceClass, version);
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
             }
 
-            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
+            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();// wrapper神奇的运行时编译
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
                 map.put(METHODS_KEY, ANY_VALUE);
@@ -549,19 +549,19 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 map.put(METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), ","));
             }
         }
-        if (!ConfigUtils.isEmpty(token)) {
+        if (!ConfigUtils.isEmpty(token)) {// 跳过
             if (ConfigUtils.isDefault(token)) {
                 map.put(TOKEN_KEY, UUID.randomUUID().toString());
             } else {
                 map.put(TOKEN_KEY, token);
             }
         }
-        // export service
+        // export service ?map只是为了获取host、port和url吗 主要是为了url
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
-        if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
+        if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)// 跳过
                 .hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                     .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
@@ -588,7 +588,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         }
                         url = url.addParameterIfAbsent(DYNAMIC_KEY, registryURL.getParameter(DYNAMIC_KEY));
                         URL monitorUrl = loadMonitor(registryURL);
-                        if (monitorUrl != null) {
+                        if (monitorUrl != null) {// 跳过
                             url = url.addParameterAndEncoded(MONITOR_KEY, monitorUrl.toFullString());
                         }
                         if (logger.isInfoEnabled()) {
@@ -597,14 +597,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
                         // For providers, this is used to enable custom proxy to generate invoker
                         String proxy = url.getParameter(PROXY_KEY);
-                        if (StringUtils.isNotEmpty(proxy)) {
+                        if (StringUtils.isNotEmpty(proxy)) {// 跳过
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
-                        Exporter<?> exporter = protocol.export(wrapperInvoker);
+                        Exporter<?> exporter = protocol.export(wrapperInvoker);// 核心都在这里面 没看到nettyserver的启动
                         exporters.add(exporter);
                     }
                 } else {
