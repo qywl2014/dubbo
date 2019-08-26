@@ -50,6 +50,7 @@ import org.apache.dubbo.common.extension.ext9_empty.impl.Ext9EmptyImpl;
 import org.apache.dubbo.common.extension.injection.InjectExt;
 import org.apache.dubbo.common.extension.injection.impl.InjectExtImpl;
 
+import org.apache.dubbo.rpc.Protocol;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -70,6 +71,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class ExtensionLoaderTest {
+    @Test
+    public void getProtocolTest(){
+        Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+        System.out.println(protocol);
+    }
+    @Test
+    public void getextensionFactoryTest(){
+        ExtensionFactory extensionFactory = ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension();
+        System.out.println(extensionFactory);
+    }
+
     @Test
     public void test_getExtensionLoader_Null() throws Exception {
         try {
