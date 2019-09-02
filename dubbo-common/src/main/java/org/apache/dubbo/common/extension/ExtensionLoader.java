@@ -78,7 +78,7 @@ public class ExtensionLoader<T> {
 
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
 
-    private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();// extension 类->对象 的缓存
 
     // ==============================
 
@@ -86,18 +86,18 @@ public class ExtensionLoader<T> {
 
     private final ExtensionFactory objectFactory;
 
-    private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();// 名字作为map的value意味着资源文件的key可以有逗号分隔的名字，取第一个
 
-    private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
+    private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();// 存无Adaptive注解，非包装类的资源文件中的type实现类
 
-    private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
+    private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();// 存资源文件中无Adaptive注解的，非包装类的，有Activate注解的 名字->注解对象
+    private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();// extension 名字->对象 的缓存
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
     private volatile Class<?> cachedAdaptiveClass = null;
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
 
-    private Set<Class<?>> cachedWrapperClasses;
+    private Set<Class<?>> cachedWrapperClasses;// 存资源文件中的无Adaptive注解的包装类
 
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
 
@@ -110,6 +110,12 @@ public class ExtensionLoader<T> {
         return type.isAnnotationPresent(SPI.class);
     }
 
+    /**
+     * 获取接口的扩展加载器，缓存有则直接获取，无则new(type不是ExtensionFactory则实例化一个)并缓存，
+     *
+     * @param type 接口
+     * @return 接口的扩展加载器
+     */
     @SuppressWarnings("unchecked")
     public static <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
         if (type == null) {
@@ -345,7 +351,7 @@ public class ExtensionLoader<T> {
             synchronized (holder) {
                 instance = holder.get();
                 if (instance == null) {
-                    instance = createExtension(name);
+                    instance = createExtension(name);// 返回的扩展类是经过包装类包装后的
                     holder.set(instance);
                 }
             }
@@ -356,7 +362,7 @@ public class ExtensionLoader<T> {
     /**
      * Return default extension, return <code>null</code> if it's not configured.
      */
-    public T getDefaultExtension() {
+    public T getDefaultExtension() {// @SPI注解未配置默认名字则返回null
         getExtensionClasses();
         if (StringUtils.isBlank(cachedDefaultName) || "true".equals(cachedDefaultName)) {
             return null;
@@ -518,7 +524,7 @@ public class ExtensionLoader<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private T createExtension(String name) {
+    private T createExtension(String name) {// 注意会使用包装类包装
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
             throw findException(name);
@@ -611,7 +617,18 @@ public class ExtensionLoader<T> {
         return getExtensionClasses().get(name);
     }
 
-    private Map<String, Class<?>> getExtensionClasses() {
+    /**
+     * 初始化extensionLoader的如下五个字段：
+     *
+     * {@link #cachedAdaptiveClass} 缓存的 适配扩展类
+     * {@link #cachedWrapperClasses} 缓存的 非适配的包装扩展类 集合
+     * {@link #cachedActivates} 缓存的 非适配非包装的扩展类的带@Activite注解的 名字注解对象map
+     * {@link #cachedNames} 名字作为map的value意味着资源文件的key可以有逗号分隔的名字，取第一个
+     * {@link #cachedClasses} 存无Adaptive注解，非包装类的资源文件中的type实现类 name->class map 只初始化一次
+     *
+     * @return cachedClasses.get()
+     */
+    private Map<String, Class<?>> getExtensionClasses() {// 无Adaptive注解，非包装类，存到cachedClasses的Map中 只初始化一次
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
             synchronized (cachedClasses) {
@@ -625,12 +642,19 @@ public class ExtensionLoader<T> {
         return classes;
     }
 
+    /**
+     * 初始化extensionLoader的如下四个字段：
+     * {@link #cachedAdaptiveClass} 缓存的 适配扩展类
+     * {@link #cachedWrapperClasses} 缓存的 非适配的包装扩展类 集合
+     * {@link #cachedActivates} 缓存的 非适配非包装的扩展类的带@Activite注解的 名字注解对象map
+     * {@link #cachedNames} 名字作为map的value意味着资源文件的key可以有逗号分隔的名字，取第一个
+     */
     // synchronized in getExtensionClasses
     private Map<String, Class<?>> loadExtensionClasses() {
-        cacheDefaultExtensionName();
+        cacheDefaultExtensionName();//接口的SPI注解内容有则作为默认扩展名字
 
         Map<String, Class<?>> extensionClasses = new HashMap<>();
-        loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());
+        loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName());// 无Adaptive注解，非包装类，存到extensionClasses Map中
         loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY, type.getName().replace("org.apache", "com.alibaba"));
         loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName());
         loadDirectory(extensionClasses, DUBBO_DIRECTORY, type.getName().replace("org.apache", "com.alibaba"));
@@ -722,7 +746,7 @@ public class ExtensionLoader<T> {
                     + clazz.getName() + " is not subtype of interface.");
         }
         if (clazz.isAnnotationPresent(Adaptive.class)) {
-            cacheAdaptiveClass(clazz);
+            cacheAdaptiveClass(clazz);// 存到cachedAdaptiveClass中
         } else if (isWrapperClass(clazz)) {
             cacheWrapperClass(clazz);
         } else {
@@ -739,7 +763,7 @@ public class ExtensionLoader<T> {
                 cacheActivateClass(clazz, names[0]);
                 for (String n : names) {
                     cacheName(clazz, n);
-                    saveInExtensionClass(extensionClasses, clazz, n);
+                    saveInExtensionClass(extensionClasses, clazz, n);// 存到extensionClasses Map中，多个name则多个key，
                 }
             }
         }
@@ -839,7 +863,7 @@ public class ExtensionLoader<T> {
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
-            return injectExtension((T) getAdaptiveExtensionClass().newInstance());
+            return injectExtension((T) getAdaptiveExtensionClass().newInstance());// inject是指调用instance的set方法
         } catch (Exception e) {
             throw new IllegalStateException("Can't create adaptive extension " + type + ", cause: " + e.getMessage(), e);
         }
@@ -850,7 +874,7 @@ public class ExtensionLoader<T> {
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
-        return cachedAdaptiveClass = createAdaptiveExtensionClass();
+        return cachedAdaptiveClass = createAdaptiveExtensionClass();// 无@Adaptive注解标记的扩展类则动态编译生成
     }
 
     private Class<?> createAdaptiveExtensionClass() {

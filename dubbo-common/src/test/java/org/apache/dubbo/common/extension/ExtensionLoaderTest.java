@@ -77,6 +77,11 @@ public class ExtensionLoaderTest {
         System.out.println(protocol);
     }
     @Test
+    public void getProtocolTestExtension(){
+        Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("mock");
+        System.out.println(protocol);
+    }
+    @Test
     public void getextensionFactoryTest(){
         ExtensionFactory extensionFactory = ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension();
         System.out.println(extensionFactory);
