@@ -182,7 +182,9 @@ public class RegistryProtocol implements Protocol {
     }
 
     public void register(URL registryUrl, URL registeredProviderUrl) {
+        // 这个方法由 AbstractRegistryFactory 实现
         Registry registry = registryFactory.getRegistry(registryUrl);
+        // 服务注册的接口为 register(URL)，这个方法定义在 FailbackRegistry
         registry.register(registeredProviderUrl);
     }
 

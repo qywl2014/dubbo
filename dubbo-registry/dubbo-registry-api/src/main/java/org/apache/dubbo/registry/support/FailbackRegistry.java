@@ -232,7 +232,8 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         removeFailedRegistered(url);
         removeFailedUnregistered(url);
         try {
-            // Sending a registration request to the server side
+            // Sending a registration request to the server side 模板方法，由子类实现 关键
+            // doRegister 方法是一个模板方法，因此我们到 FailbackRegistry 子类 ZookeeperRegistry 中进行分析
             doRegister(url);
         } catch (Exception e) {
             Throwable t = e;
