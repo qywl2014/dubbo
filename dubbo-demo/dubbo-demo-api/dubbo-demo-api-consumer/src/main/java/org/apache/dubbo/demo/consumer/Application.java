@@ -31,6 +31,6 @@ public class Application {
         reference.setInterface(DemoService.class);
         DemoService service = reference.get();
         String message = service.sayHello("dubbo");
-        System.out.println(message);
+        System.out.println("-----------" + message);
     }
 }
