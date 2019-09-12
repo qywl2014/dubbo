@@ -69,7 +69,7 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
     }
 
     @Override
-    public Object getObject() {
+    public Object getObject() {// 当我们的服务被注入到其他类中时，Spring 会第一时间调用 getObject 方法，并由该方法执行服务引用逻辑
         return get();
     }
 

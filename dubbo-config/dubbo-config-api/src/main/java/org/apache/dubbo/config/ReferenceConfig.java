@@ -404,7 +404,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
             // 单个注册中心或服务提供者(服务直连，下同)
             if (urls.size() == 1) {// 进入
-                invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
+                invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));// 这里是RegistryProtocol 直连是DubboRegistry吗
             } else {// 多个注册中心或多个服务提供者，或者两者混合
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
                 URL registryURL = null;

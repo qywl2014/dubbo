@@ -79,6 +79,7 @@ public abstract class Proxy {
         }
 
         StringBuilder sb = new StringBuilder();
+        // 遍历接口列表
         for (int i = 0; i < ics.length; i++) {
             String itf = ics[i].getName();
             if (!ics[i].isInterface()) {
@@ -87,6 +88,7 @@ public abstract class Proxy {
 
             Class<?> tmp = null;
             try {
+                // 重新加载接口类
                 tmp = Class.forName(itf, false, cl);
             } catch (ClassNotFoundException e) {
             }
@@ -95,6 +97,7 @@ public abstract class Proxy {
                 throw new IllegalArgumentException(ics[i] + " is not visible from class loader");
             }
 
+            // 拼接接口全限定名，分隔符为 ;
             sb.append(itf).append(';');
         }
 
@@ -110,6 +113,7 @@ public abstract class Proxy {
         Proxy proxy = null;
         synchronized (cache) {
             do {
+                // 从缓存中获取 Reference<Proxy> 实例
                 Object value = cache.get(key);
                 if (value instanceof Reference<?>) {
                     proxy = (Proxy) ((Reference<?>) value).get();
@@ -118,12 +122,15 @@ public abstract class Proxy {
                     }
                 }
 
+                // 并发控制，保证只有一个线程可以进行后续操作
                 if (value == PENDING_GENERATION_MARKER) {
                     try {
+                        // 其他线程在此处进行等待
                         cache.wait();
                     } catch (InterruptedException e) {
                     }
                 } else {
+                    // 放置标志位到缓存中，并跳出 while 循环进行后续操作
                     cache.put(key, PENDING_GENERATION_MARKER);
                     break;
                 }
@@ -133,6 +140,8 @@ public abstract class Proxy {
 
         long id = PROXY_CLASS_COUNTER.getAndIncrement();
         String pkg = null;
+        // ccp 用于为服务接口生成代理类，比如我们有一个 DemoService 接口，这个接口代理类就是由 ccp 生成的。
+        // ccm 则是用于为 org.apache.dubbo.common.bytecode.Proxy 抽象类生成子类，主要是实现 Proxy 类的抽象方法。
         ClassGenerator ccp = null, ccm = null;
         try {
             ccp = ClassGenerator.newInstance(cl);
@@ -153,8 +162,12 @@ public abstract class Proxy {
                 }
                 ccp.addInterface(ics[i]);
 
+                // 遍历接口方法
                 for (Method method : ics[i].getMethods()) {
+                    // 获取方法描述，可理解为方法签名
                     String desc = ReflectUtils.getDesc(method);
+                    // 如果方法描述字符串已在 worked 中，则忽略。考虑这种情况，
+                    // A 接口和 B 接口中包含一个完全相同的方法
                     if (worked.contains(desc)) {
                         continue;
                     }
@@ -164,7 +177,9 @@ public abstract class Proxy {
                     worked.add(desc);
 
                     int ix = methods.size();
+                    // 获取方法返回值类型
                     Class<?> rt = method.getReturnType();
+                    // 获取方法返回值类型
                     Class<?>[] pts = method.getParameterTypes();
 
                     StringBuilder code = new StringBuilder("Object[] args = new Object[").append(pts.length).append("];");

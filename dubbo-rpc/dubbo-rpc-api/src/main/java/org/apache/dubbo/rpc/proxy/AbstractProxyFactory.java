@@ -41,7 +41,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
     public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
         Class<?>[] interfaces = null;
         String config = invoker.getUrl().getParameter(INTERFACES);
-        if (config != null && config.length() > 0) {
+        if (config != null && config.length() > 0) {// 跳过
             String[] types = COMMA_SPLIT_PATTERN.split(config);
             if (types != null && types.length > 0) {
                 interfaces = new Class<?>[types.length + 2];
@@ -57,7 +57,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
             interfaces = new Class<?>[]{invoker.getInterface(), EchoService.class};
         }
 
-        if (!GenericService.class.isAssignableFrom(invoker.getInterface()) && generic) {
+        if (!GenericService.class.isAssignableFrom(invoker.getInterface()) && generic) {// 跳过
             int len = interfaces.length;
             Class<?>[] temp = interfaces;
             interfaces = new Class<?>[len + 1];

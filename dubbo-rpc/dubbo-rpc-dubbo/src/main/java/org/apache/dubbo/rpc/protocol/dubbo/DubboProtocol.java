@@ -432,11 +432,12 @@ public class DubboProtocol extends AbstractProtocol {
 
         boolean useShareConnect = false;
 
+        // 获取连接数，默认为0，表示未配置
         int connections = url.getParameter(CONNECTIONS_KEY, 0);
         List<ReferenceCountExchangeClient> shareClients = null;
         // if not configured, connection is shared, otherwise, one connection for one service
         if (connections == 0) {
-            useShareConnect = true;
+            useShareConnect = true;// 如果未配置 connections，则共享连接
 
             /**
              * The xml configuration should have a higher priority than properties.
@@ -450,10 +451,10 @@ public class DubboProtocol extends AbstractProtocol {
         ExchangeClient[] clients = new ExchangeClient[connections];
         for (int i = 0; i < clients.length; i++) {
             if (useShareConnect) {
-                clients[i] = shareClients.get(i);
+                clients[i] = shareClients.get(i);// 获取共享客户端
 
             } else {
-                clients[i] = initClient(url);
+                clients[i] = initClient(url);// 初始化新的客户端
             }
         }
 
@@ -589,14 +590,15 @@ public class DubboProtocol extends AbstractProtocol {
      */
     private ExchangeClient initClient(URL url) {
 
-        // client type setting.
+        // client type setting. 获取客户端类型，默认为 netty
         String str = url.getParameter(CLIENT_KEY, url.getParameter(SERVER_KEY, DEFAULT_REMOTING_CLIENT));
 
+        // 添加编解码和心跳包参数到 url 中
         url = url.addParameter(CODEC_KEY, DubboCodec.NAME);
         // enable heartbeat by default
         url = url.addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT));
 
-        // BIO is not allowed since it has severe performance issue.
+        // BIO is not allowed since it has severe performance issue. 检测客户端类型是否存在，不存在则抛出异常
         if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
             throw new RpcException("Unsupported client type: " + str + "," +
                     " supported client type is " + StringUtils.join(ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions(), " "));
@@ -606,10 +608,10 @@ public class DubboProtocol extends AbstractProtocol {
         try {
             // connection should be lazy
             if (url.getParameter(LAZY_CONNECT_KEY, false)) {
-                client = new LazyConnectExchangeClient(url, requestHandler);
+                client = new LazyConnectExchangeClient(url, requestHandler);// 创建懒加载 ExchangeClient 实例
 
             } else {
-                client = Exchangers.connect(url, requestHandler);
+                client = Exchangers.connect(url, requestHandler);// 创建普通 ExchangeClient 实例
             }
 
         } catch (RemotingException e) {
