@@ -422,7 +422,7 @@ public class RegistryProtocol implements Protocol {
         directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
                 PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));// 订阅 providers、configurators、routers 等节点数据
 
-        Invoker invoker = cluster.join(directory);// 一个注册中心可能有多个服务提供者，因此这里需要将多个服务提供者合并为一个
+        Invoker invoker = cluster.join(directory);// 默认FailOverCluster 一个注册中心可能有多个服务提供者，因此这里需要将多个服务提供者合并为一个
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;
     }

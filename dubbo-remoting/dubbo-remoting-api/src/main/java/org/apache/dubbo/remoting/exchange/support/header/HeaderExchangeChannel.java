@@ -52,7 +52,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (channel == null) {
             throw new IllegalArgumentException("channel == null");
         }
-        this.channel = channel;
+        this.channel = channel;// 这里的 channel 指向的是 NettyClient
     }
 
     static HeaderExchangeChannel getOrAddChannel(Channel ch) {
@@ -111,11 +111,11 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         // create request.
         Request req = new Request();
         req.setVersion(Version.getProtocolVersion());
-        req.setTwoWay(true);
+        req.setTwoWay(true);// 设置双向通信标志为 true
         req.setData(request);
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout);
         try {
-            channel.send(req);
+            channel.send(req);// channel是NettyClient NettyClient中并未实现 send 方法，该方法继承自父类 AbstractPeer，下面直接分析 AbstractPeer 的代码
         } catch (RemotingException e) {
             future.cancel();
             throw e;

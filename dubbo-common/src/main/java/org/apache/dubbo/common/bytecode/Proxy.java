@@ -163,6 +163,15 @@ public abstract class Proxy {
                 ccp.addInterface(ics[i]);
 
                 // 遍历接口方法
+                /**
+                 * 生成的方法
+                 * public java.lang.String sayHello(java.lang.String arg0) {
+                 *         Object[] args = new Object[1];
+                 *         args[0] = ($w) $1;
+                 *         Object ret = handler.invoke(this, methods[0], args);
+                 *         return (java.lang.String) ret;
+                 * }
+                 */
                 for (Method method : ics[i].getMethods()) {
                     // 获取方法描述，可理解为方法签名
                     String desc = ReflectUtils.getDesc(method);

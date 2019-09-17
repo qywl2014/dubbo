@@ -77,7 +77,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     @Override
     public CompletableFuture<Object> request(Object request, int timeout) throws RemotingException {
-        return client.request(request, timeout);
+        return client.request(request, timeout);//HeaderExchangeClient
     }
 
     @Override
