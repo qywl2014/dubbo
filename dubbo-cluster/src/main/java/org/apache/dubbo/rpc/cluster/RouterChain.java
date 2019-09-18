@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  */
 public class RouterChain<T> {
 
-    // full list of addresses from registry, classified by method name.
+    // full list of addresses from registry, classified by method name. 服务调用的时候，会调用directory的list方法，然后从这里拿到invoker list
     private List<Invoker<T>> invokers = Collections.emptyList();
 
     // containing all routers, reconstruct every time 'route://' urls change.

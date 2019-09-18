@@ -282,7 +282,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (invokerUrls.isEmpty()) {
                 return;
             }
-            Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
+            Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map 将 url 转成 Invoker
 
             /**
              * If the calculation is wrong, it is not processed.
@@ -301,7 +301,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             List<Invoker<T>> newInvokers = Collections.unmodifiableList(new ArrayList<>(newUrlInvokerMap.values()));
             // pre-route and build cache, notice that route cache should build on original Invoker list.
             // toMergeMethodInvokerMap() will wrap some invokers having different groups, those wrapped invokers not should be routed.
-            routerChain.setInvokers(newInvokers);
+            routerChain.setInvokers(newInvokers);// 服务引用的时候，会在这里存第一次从zk获得的invoker list
             this.invokers = multiGroup ? toMergeInvokerList(newInvokers) : newInvokers;
             this.urlInvokerMap = newUrlInvokerMap;
 
@@ -380,37 +380,37 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             return newUrlInvokerMap;
         }
         Set<String> keys = new HashSet<>();
-        String queryProtocols = this.queryMap.get(PROTOCOL_KEY);
+        String queryProtocols = this.queryMap.get(PROTOCOL_KEY);// 获取服务消费端配置的协议
         for (URL providerUrl : urls) {
             // If protocol is configured at the reference side, only the matching protocol is selected
             if (queryProtocols != null && queryProtocols.length() > 0) {
                 boolean accept = false;
                 String[] acceptProtocols = queryProtocols.split(",");
-                for (String acceptProtocol : acceptProtocols) {
+                for (String acceptProtocol : acceptProtocols) {// 检测服务提供者协议是否被服务消费者所支持
                     if (providerUrl.getProtocol().equals(acceptProtocol)) {
                         accept = true;
                         break;
                     }
                 }
                 if (!accept) {
-                    continue;
+                    continue;// 若服务消费者协议头不被消费者所支持，则忽略当前 providerUrl
                 }
             }
             if (EMPTY_PROTOCOL.equals(providerUrl.getProtocol())) {
-                continue;
+                continue;// 忽略 empty 协议
             }
             if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())) {
                 logger.error(new IllegalStateException("Unsupported protocol " + providerUrl.getProtocol() +
                         " in notified url: " + providerUrl + " from registry " + getUrl().getAddress() +
                         " to consumer " + NetUtils.getLocalHost() + ", supported protocol: " +
                         ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
-                continue;
+                continue;// 通过 SPI 检测服务端协议是否被消费端支持，不支持则抛出异常
             }
-            URL url = mergeUrl(providerUrl);
+            URL url = mergeUrl(providerUrl);// 合并 url
 
             String key = url.toFullString(); // The parameter urls are sorted
             if (keys.contains(key)) { // Repeated url
-                continue;
+                continue;// 忽略重复 url
             }
             keys.add(key);
             // Cache key is url that does not merge with consumer side parameters, regardless of how the consumer combines parameters, if the server url changes, then refer again

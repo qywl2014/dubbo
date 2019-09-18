@@ -123,7 +123,7 @@ public class NettyClient extends AbstractClient {
         long start = System.currentTimeMillis();
         ChannelFuture future = bootstrap.connect(getConnectAddress());
         try {
-            boolean ret = future.awaitUninterruptibly(getConnectTimeout(), MILLISECONDS);
+            boolean ret = future.awaitUninterruptibly(2000000/*getConnectTimeout()*/, MILLISECONDS);
 
             if (ret && future.isSuccess()) {
                 Channel newChannel = future.channel();
