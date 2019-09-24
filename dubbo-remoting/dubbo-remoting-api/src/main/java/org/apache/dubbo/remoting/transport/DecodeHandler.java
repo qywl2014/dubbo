@@ -26,6 +26,7 @@ import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 
+// DecodeHandler 存在的意义就是保证请求或响应对象可在线程池中被解码
 public class DecodeHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeHandler.class);
@@ -48,7 +49,7 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
             decode(((Response) message).getResult());
         }
 
-        handler.received(channel, message);
+        handler.received(channel, message);// HeaderExchangeHandler
     }
 
     private void decode(Object message) {

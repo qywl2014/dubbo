@@ -29,7 +29,7 @@ public class Application {
         reference.setApplication(new ApplicationConfig("dubbo-demo-api-consumer"));
         reference.setRegistry(new RegistryConfig("zookeeper://127.0.0.1:2181"));
         reference.setInterface(DemoService.class);
-        DemoService service = reference.get();
+        DemoService service = reference.get();// 这里会建立socket连接 FailOverClusterInvoker持有的invoker有netty的channel
         String message = service.sayHello("dubbo");
         System.out.println("-----------" + message);
     }

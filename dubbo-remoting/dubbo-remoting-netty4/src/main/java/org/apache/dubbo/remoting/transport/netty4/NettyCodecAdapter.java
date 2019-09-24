@@ -67,7 +67,7 @@ final public class NettyCodecAdapter {
             Channel ch = ctx.channel();
             NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler);
             try {
-                codec.encode(channel, buffer, msg);
+                codec.encode(channel, buffer, msg);// dubbocountcodec
             } finally {
                 NettyChannel.removeChannelIfDisconnected(ch);
             }
@@ -87,7 +87,7 @@ final public class NettyCodecAdapter {
                 // decode object.
                 do {
                     int saveReaderIndex = message.readerIndex();
-                    Object msg = codec.decode(channel, message);
+                    Object msg = codec.decode(channel, message);//dubbocountcodec
                     if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                         message.readerIndex(saveReaderIndex);
                         break;

@@ -125,7 +125,7 @@ public class DubboProtocol extends AbstractProtocol {
 
             Invocation inv = (Invocation) message;
             Invoker<?> invoker = getInvoker(channel, inv);
-            // need to consider backward-compatibility if it's a callback
+            // need to consider backward-compatibility if it's a callback 回调相关，忽略
             if (Boolean.TRUE.toString().equals(inv.getAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
                 String methodsStr = invoker.getUrl().getParameters().get("methods");
                 boolean hasMethod = false;
@@ -149,6 +149,7 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
             RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
+            // 通过 Invoker 调用具体的服务
             Result result = invoker.invoke(inv);
             return result.completionFuture().thenApply(Function.identity());
         }
@@ -258,6 +259,8 @@ public class DubboProtocol extends AbstractProtocol {
             inv.getAttachments().put(IS_CALLBACK_SERVICE_INVOKE, Boolean.TRUE.toString());
         }
 
+        // 计算 service key，格式为 groupName/serviceName:serviceVersion:port。比如：
+        //   dubbo/com.alibaba.dubbo.demo.DemoService:1.0.0:20880
         String serviceKey = serviceKey(port, path, inv.getAttachments().get(VERSION_KEY), inv.getAttachments().get(GROUP_KEY));
         DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);
 
@@ -420,7 +423,7 @@ public class DubboProtocol extends AbstractProtocol {
     public <T> Invoker<T> protocolBindingRefer(Class<T> serviceType, URL url) throws RpcException {
         optimizeSerialization(url);
 
-        // create rpc invoker.
+        // create rpc invoker. getClients 关键
         DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
         invokers.add(invoker);
 
@@ -436,7 +439,7 @@ public class DubboProtocol extends AbstractProtocol {
         int connections = url.getParameter(CONNECTIONS_KEY, 0);
         List<ReferenceCountExchangeClient> shareClients = null;
         // if not configured, connection is shared, otherwise, one connection for one service
-        if (connections == 0) {
+        if (connections == 0) {// 进入
             useShareConnect = true;// 如果未配置 connections，则共享连接
 
             /**
@@ -445,7 +448,7 @@ public class DubboProtocol extends AbstractProtocol {
             String shareConnectionsStr = url.getParameter(SHARE_CONNECTIONS_KEY, (String) null);
             connections = Integer.parseInt(StringUtils.isBlank(shareConnectionsStr) ? ConfigUtils.getProperty(SHARE_CONNECTIONS_KEY,
                     DEFAULT_SHARE_CONNECTIONS) : shareConnectionsStr);
-            shareClients = getSharedClient(url, connections);
+            shareClients = getSharedClient(url, connections);// 关键
         }
 
         ExchangeClient[] clients = new ExchangeClient[connections];
@@ -490,7 +493,7 @@ public class DubboProtocol extends AbstractProtocol {
 
             // If the clients is empty, then the first initialization is
             if (CollectionUtils.isEmpty(clients)) {
-                clients = buildReferenceCountExchangeClientList(url, connectNum);
+                clients = buildReferenceCountExchangeClientList(url, connectNum);// 关键
                 referenceClientMap.put(key, clients);
 
             } else {
@@ -564,7 +567,7 @@ public class DubboProtocol extends AbstractProtocol {
     private List<ReferenceCountExchangeClient> buildReferenceCountExchangeClientList(URL url, int connectNum) {
         List<ReferenceCountExchangeClient> clients = new ArrayList<>();
 
-        for (int i = 0; i < connectNum; i++) {
+        for (int i = 0; i < connectNum; i++) {// connectNum = 1
             clients.add(buildReferenceCountExchangeClient(url));
         }
 
@@ -578,7 +581,7 @@ public class DubboProtocol extends AbstractProtocol {
      * @return
      */
     private ReferenceCountExchangeClient buildReferenceCountExchangeClient(URL url) {
-        ExchangeClient exchangeClient = initClient(url);
+        ExchangeClient exchangeClient = initClient(url);// 关键
 
         return new ReferenceCountExchangeClient(exchangeClient);
     }
@@ -610,7 +613,7 @@ public class DubboProtocol extends AbstractProtocol {
             if (url.getParameter(LAZY_CONNECT_KEY, false)) {
                 client = new LazyConnectExchangeClient(url, requestHandler);// 创建懒加载 ExchangeClient 实例
 
-            } else {
+            } else {//进入
                 client = Exchangers.connect(url, requestHandler);// 创建普通 ExchangeClient 实例
             }
 

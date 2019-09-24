@@ -101,7 +101,7 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
     }
 
     protected Codec2 getCodec() {
-        return codec;
+        return codec;//dubbocountcodec
     }
 
     protected int getTimeout() {

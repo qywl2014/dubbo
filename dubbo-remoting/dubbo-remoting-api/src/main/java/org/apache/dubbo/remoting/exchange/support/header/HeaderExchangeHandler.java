@@ -59,6 +59,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     static void handleResponse(Channel channel, Response response) throws RemotingException {
         if (response != null && !response.isHeartbeat()) {
+            // 继续向下调用
             DefaultFuture.received(channel, response);
         }
     }
@@ -79,6 +80,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     void handleRequest(final ExchangeChannel channel, Request req) throws RemotingException {
         Response res = new Response(req.getId(), req.getVersion());
+        // 检测请求是否合法，不合法则返回状态码为 BAD_REQUEST 的响应
         if (req.isBroken()) {
             Object data = req.getData();
 
@@ -93,22 +95,28 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             res.setErrorMessage("Fail to decode request due to: " + msg);
             res.setStatus(Response.BAD_REQUEST);
 
+            // 将调用结果返回给服务消费端
             channel.send(res);
             return;
         }
-        // find handler by message class.
+        // find handler by message class. 获取 data 字段值，也就是 RpcInvocation 对象
         Object msg = req.getData();
         try {
+            // 继续向下调用
+            /**
+             * {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#requestHandler}
+             */
             CompletionStage<Object> future = handler.reply(channel, msg);
             future.whenComplete((appResult, t) -> {
                 try {
-                    if (t == null) {
+                    if (t == null) {// 若调用过程出现错误，则设置 SERVICE_ERROR，表示服务端异常
                         res.setStatus(Response.OK);
                         res.setResult(appResult);
                     } else {
                         res.setStatus(Response.SERVICE_ERROR);
                         res.setErrorMessage(StringUtils.toString(t));
                     }
+                    // 将调用结果返回给服务消费端
                     channel.send(res);
                 } catch (RemotingException e) {
                     logger.warn("Send result to consumer failed, channel is " + channel + ", msg is " + e);
@@ -117,6 +125,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                 }
             });
         } catch (Throwable e) {
+            // 若调用过程出现异常，则设置 SERVICE_ERROR，表示服务端异常
             res.setStatus(Response.SERVICE_ERROR);
             res.setErrorMessage(StringUtils.toString(e));
             channel.send(res);
@@ -183,13 +192,15 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {
+            // 处理请求对象
             if (message instanceof Request) {
                 // handle request.
                 Request request = (Request) message;
                 if (request.isEvent()) {
+                    // 处理事件
                     handlerEvent(channel, request);
-                } else {
-                    if (request.isTwoWay()) {
+                } else {// 处理普通的请求
+                    if (request.isTwoWay()) {// 双向通信
                         handleRequest(exchangeChannel, request);
                     } else {
                         handler.received(exchangeChannel, request.getData());

@@ -54,7 +54,7 @@ public final class DubboCountCodec implements Codec2 {
                 logMessageLength(obj, buffer.readerIndex() - save);
                 save = buffer.readerIndex();
             }
-        } while (true);
+        } while (true);// 此处无限循环 用于粘包、拆包
         if (result.isEmpty()) {
             return Codec2.DecodeResult.NEED_MORE_INPUT;
         }

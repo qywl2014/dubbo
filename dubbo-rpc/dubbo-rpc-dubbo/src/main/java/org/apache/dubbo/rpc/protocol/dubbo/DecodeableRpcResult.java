@@ -75,6 +75,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
 
+        // 反序列化响应类型
         byte flag = in.readByte();
         switch (flag) {
             case DubboCodec.RESPONSE_NULL_VALUE:
@@ -88,8 +89,11 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
             case DubboCodec.RESPONSE_NULL_VALUE_WITH_ATTACHMENTS:
                 handleAttachment(in);
                 break;
+            // 返回值不为空，且携带了 attachments 集合 demo应该是进入这个
             case DubboCodec.RESPONSE_VALUE_WITH_ATTACHMENTS:
+                // 反序列化调用结果，并保存起来
                 handleValue(in);
+                // 反序列化 attachments 集合，并存储起来
                 handleAttachment(in);
                 break;
             case DubboCodec.RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS:
@@ -109,6 +113,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
     public void decode() throws Exception {
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
+                // 执行反序列化操作
                 decode(channel, inputStream);
             } catch (Throwable e) {
                 if (log.isWarnEnabled()) {
@@ -124,6 +129,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleValue(ObjectInput in) throws IOException {
         try {
+            // 获取返回值类型
             Type[] returnTypes = RpcUtils.getReturnTypes(invocation);
             Object value = null;
             if (ArrayUtils.isEmpty(returnTypes)) {
@@ -133,6 +139,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
             } else {
                 value = in.readObject((Class<?>) returnTypes[0], returnTypes[1]);
             }
+            // 保存反序列化调用结果
             setValue(value);
         } catch (ClassNotFoundException e) {
             rethrow(e);

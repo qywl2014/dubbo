@@ -94,6 +94,16 @@ public class NettyServer extends AbstractServer implements Server {
         workerGroup = new NioEventLoopGroup(getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
                 new DefaultThreadFactory("NettyServerWorker", true));
 
+        // channelRead 调用this的received(channel, msg)
+        /**
+         *   —> AbstractPeer#received(Channel, Object) this
+         *     —> MultiMessageHandler#received(Channel, Object)
+         *       —> HeartbeatHandler#received(Channel, Object)
+         *         —> {@link org.apache.dubbo.remoting.transport.dispatcher.all.AllChannelHandler#received(Channel, Object)}
+         *          -> DecodeHandler
+         *           -> HeaderExchangeHandler
+         *            -> DubboProtocol$requestHandler
+         */
         final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
         channels = nettyServerHandler.getChannels();
 
@@ -112,7 +122,7 @@ public class NettyServer extends AbstractServer implements Server {
                                 .addLast("decoder", adapter.getDecoder())
                                 .addLast("encoder", adapter.getEncoder())
                                 .addLast("server-idle-handler", new IdleStateHandler(0, 0, idleTimeout, MILLISECONDS))
-                                .addLast("handler", nettyServerHandler);
+                                .addLast("handler", nettyServerHandler);// 对出站数据不做处理，传给下一个handler
                     }
                 });
         // bind 绑定到指定的 ip 和端口上
