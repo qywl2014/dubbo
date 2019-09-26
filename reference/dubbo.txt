@@ -1,11 +1,55 @@
 NettyChannel 134行 真正发送rpc请求
 
-provider 接受消息:
-  
-consumer 接受消息:
-  DubboProtocol#requestHandler
-    HeaderExchangeHandler
-      DecodeHandler
-        AllChannelHandler 应该
-          HeartbeatHandler
-            MultiMessageHandler
+consumer 发送消息:               // 官网复制的，不是自己调试的
+proxy0#sayHello(String)
+  —> InvokerInvocationHandler#invoke(Object, Method, Object[])
+    —> MockClusterInvoker#invoke(Invocation)
+      —> AbstractClusterInvoker#invoke(Invocation)
+        —> FailoverClusterInvoker#doInvoke(Invocation, List<Invoker<T>>, LoadBalance)
+         -> RegistryDirectory$InvokerDelegate // 自己加的 2.7.0
+          —> Filter#invoke(Invoker, Invocation)  // 包含多个 Filter 调用
+            —> ListenerInvokerWrapper#invoke(Invocation)
+             -> AsyncToSyncInvoker // 自己加的 2.7.0
+              —> AbstractInvoker#invoke(Invocation)
+                —> DubboInvoker#doInvoke(Invocation)
+                  —> ReferenceCountExchangeClient#request(Object, int)
+                    —> HeaderExchangeClient#request(Object, int)
+                      —> HeaderExchangeChannel#request(Object, int)
+                        —> AbstractPeer#send(Object)
+                          —> AbstractClient#send(Object, boolean)
+                            —> NettyChannel#send(Object, boolean)
+                              —> NioClientSocketChannel#write(Object)
+
+provider 接收消息:
+decode
+    -> AbstractPeer#received(Channel, Object) this
+        -> MultiMessageHandler#received(Channel, Object)
+            -> HeartbeatHandler#received(Channel, Object)
+                -> AllChannelHandler#received(Channel, Object)
+                    -> DecodeHandler
+                        -> HeaderExchangeHandler
+                            -> DubboProtocol$requestHandler
+consumer 接收消息:
+decode
+    -> AbstractPeer#received(Channel, Object) this
+        -> MultiMessageHandler
+            -> HeartbeatHandler
+                -> AllChannelHandler // 应该
+                    -> DecodeHandler
+                        -> HeaderExchangeHandler // 主要在这里 received 方法接收调用结果
+                            -> DubboProtocol#requestHandler
+                                -> 从AbstractProtocol的exporterMap中根据serviceKey获得Exporter，然后获得Invoker
+
+
+provider服务导出:
+ProtocolFilterWrapper
+    ProtocolListenerWrapper
+        -> RegistryProtocol
+            ProtocolFilterWrapper
+                ProtocolListenerWrapper
+                    -> DubboProtocol：
+                    存储Exporter到map中 并启动netty服务器
+
+
+
+
