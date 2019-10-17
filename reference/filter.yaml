@@ -1,0 +1,44 @@
+dubbo-rpc:
+  dubbo-rpc-dubbo:
+    TraceFilter
+    FutureFilter
+  dubbo-rpc-api:
+    echo=org.apache.dubbo.rpc.filter.EchoFilter
+    generic=org.apache.dubbo.rpc.filter.GenericFilter
+    genericimpl=org.apache.dubbo.rpc.filter.GenericImplFilter
+    token=org.apache.dubbo.rpc.filter.TokenFilter
+    accesslog=org.apache.dubbo.rpc.filter.AccessLogFilter
+    activelimit=org.apache.dubbo.rpc.filter.ActiveLimitFilter
+    classloader=org.apache.dubbo.rpc.filter.ClassLoaderFilter
+    context=org.apache.dubbo.rpc.filter.ContextFilter
+    consumercontext=org.apache.dubbo.rpc.filter.ConsumerContextFilter
+    exception=org.apache.dubbo.rpc.filter.ExceptionFilter
+    executelimit=org.apache.dubbo.rpc.filter.ExecuteLimitFilter
+    deprecated=org.apache.dubbo.rpc.filter.DeprecatedFilter
+#    compatible=org.apache.dubbo.rpc.filter.CompatibleFilter 无@Activate 其他都有
+    timeout=org.apache.dubbo.rpc.filter.TimeoutFilter
+dubbo-monitor:
+  dubbo-monitor-api:
+    monitor=org.apache.dubbo.monitor.support.MonitorFilter
+dubbo-filter:
+  dubbo-filter-validation:
+    validation=org.apache.dubbo.validation.filter.ValidationFilter
+  dubbo-filter-cache:
+    cache=org.apache.dubbo.cache.filter.CacheFilter
+
+无包装无Adaptive
+
+demo provider filter:
+  echo
+  classloader
+  generic
+  context
+  trace
+  timeout
+  monitor
+  exception
+
+demo consumer filter:
+  consumercontext
+  future
+  monitor
